@@ -3,22 +3,23 @@
   "displayName": "prettified-sub-interfaces",
   "description": "A vscode extension which makes your sub interfaces give you the parent interface's type.",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sebanimm/prettified-sub-interfaces"
+  },
   "engines": {
     "vscode": "^1.89.0"
   },
   "categories": [
-    "Other"
+    "Programming Languages",
+    "Visualization"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact"
+  ],
   "main": "./dist/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "prettified-sub-interfaces.helloWorld",
-        "title": "Hello World"
-      }
-    ]
-  },
+  "contributes": {},
   "scripts": {
     "vscode:prepublish": "pnpm run package",
     "compile": "pnpm run check-types && pnpm run lint && node esbuild.js",
