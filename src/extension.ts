@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 export function activate(context: vscode.ExtensionContext) {
-  const registeredUris = new Set<string>();
+  const registeredLanguages = new Set<string>();
 
   const hoverProvider: vscode.HoverProvider = {
     provideHover(document, position) {
@@ -12,17 +12,21 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       const word = document.getText(range);
-      const interfaceRegex = /(?:\binterface\s+(\w+))\s*(?:extends\s+(\w+))/g;
-      const text = document.getText();
+      const interfaceRegex = /(?:\binterface\s+(\w+))\s*(?:extends\s+(\w+))/;
+      const interfaceRange = document.getWordRangeAtPosition(
+        position,
+        interfaceRegex,
+      );
 
-      let match;
+      if (!interfaceRange) {
+        return null;
+      }
 
-      while ((match = interfaceRegex.exec(text)) !== null) {
-        if (match[1] === word) {
-          return new vscode.Hover(
-            `This is interface '${match[1]}' declaration.`,
-          );
-        }
+      const interfaceText = document.getText(interfaceRange);
+      const match = interfaceRegex.exec(interfaceText);
+
+      if (match && match[1] === word) {
+        return new vscode.Hover(`This is interface '${match[1]}' declaration.`);
       }
 
       return null;
@@ -31,28 +35,30 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.languages.onDidChangeDiagnostics((e) => {
-      const editor = vscode.window.activeTextEditor;
+      e.uris.forEach((uri) => {
+        const editors = vscode.window.visibleTextEditors.filter(
+          (editor) => editor.document.uri.toString() === uri.toString(),
+        );
 
-      if (!editor) {
-        return;
-      }
+        editors.forEach((editor) => {
+          const { languageId } = editor.document;
 
-      const documentUri = editor.document.uri.toString();
-      const languageId = editor.document.languageId;
-      const key = `${documentUri}:${languageId}`;
+          if (registeredLanguages.has(languageId)) {
+            return;
+          }
 
-      if (registeredUris.has(key)) {
-        return;
-      }
+          registeredLanguages.add(languageId);
 
-      registeredUris.add(key);
-
-      context.subscriptions.push(
-        vscode.languages.registerHoverProvider(
-          { language: languageId },
-          hoverProvider,
-        ),
-      );
+          context.subscriptions.push(
+            vscode.languages.registerHoverProvider(
+              { language: languageId },
+              hoverProvider,
+            ),
+          );
+        });
+      });
     }),
   );
 }
+
+export function deactivate() {}
