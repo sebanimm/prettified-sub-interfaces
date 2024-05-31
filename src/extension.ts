@@ -35,27 +35,31 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.languages.onDidChangeDiagnostics((e) => {
-      e.uris.forEach((uri) => {
-        const editors = vscode.window.visibleTextEditors.filter(
-          (editor) => editor.document.uri.toString() === uri.toString(),
+      const editors = vscode.window.visibleTextEditors;
+
+      editors.forEach((editor) => {
+        const { languageId, uri: documentUri } = editor.document;
+
+        if (registeredLanguages.has(languageId)) {
+          return;
+        }
+
+        const isUriInDiagnostics = e.uris.some(
+          (uri) => uri.toString() === documentUri.toString(),
         );
 
-        editors.forEach((editor) => {
-          const { languageId } = editor.document;
+        if (!isUriInDiagnostics) {
+          return;
+        }
 
-          if (registeredLanguages.has(languageId)) {
-            return;
-          }
+        registeredLanguages.add(languageId);
 
-          registeredLanguages.add(languageId);
-
-          context.subscriptions.push(
-            vscode.languages.registerHoverProvider(
-              { language: languageId },
-              hoverProvider,
-            ),
-          );
-        });
+        context.subscriptions.push(
+          vscode.languages.registerHoverProvider(
+            { language: languageId },
+            hoverProvider,
+          ),
+        );
       });
     }),
   );
