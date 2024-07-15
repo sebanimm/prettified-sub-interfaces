@@ -25,11 +25,11 @@ export function activate(context: vscode.ExtensionContext) {
       const interfaceText = document.getText(interfaceRange);
       const match = interfaceRegex.exec(interfaceText);
 
-      if (match && match[1] === word) {
-        return new vscode.Hover(`This is interface '${match[1]}' declaration.`);
+      if (!match || !(match[1] === word)) {
+        return null;
       }
 
-      return null;
+      return new vscode.Hover(`This is interface '${match[1]}' declaration.`);
     },
   };
 
