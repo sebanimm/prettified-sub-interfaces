@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import ts from "typescript";
 
 export function activate(context: vscode.ExtensionContext) {
   const registeredLanguages = new Set<string>();
@@ -11,25 +12,43 @@ export function activate(context: vscode.ExtensionContext) {
         return null;
       }
 
+      const program = ts.createProgram([document.fileName], {});
+      const sourceFile = program.getSourceFile(document.fileName);
+
+      if (!sourceFile) {
+        return null;
+      }
+
+      const subInterfaces: ts.InterfaceDeclaration[] = [];
+
+      ts.forEachChild(sourceFile, visit);
+
+      function visit(node: ts.Node) {
+        if (ts.isInterfaceDeclaration(node) && isSubInterface(node)) {
+          subInterfaces.push(node);
+        }
+
+        ts.forEachChild(node, visit);
+      }
+
+      function isSubInterface(interfaceDeclaration: ts.InterfaceDeclaration) {
+        return (
+          interfaceDeclaration.heritageClauses !== undefined &&
+          interfaceDeclaration.heritageClauses.some(
+            (clause) => clause.token === ts.SyntaxKind.ExtendsKeyword,
+          )
+        );
+      }
+
       const word = document.getText(range);
-      const interfaceRegex = /(?:\binterface\s+(\w+))\s*(?:extends\s+(\w+))/;
-      const interfaceRange = document.getWordRangeAtPosition(
-        position,
-        interfaceRegex,
-      );
 
-      if (!interfaceRange) {
-        return null;
+      for (const subInterface of subInterfaces) {
+        if (subInterface.name.text !== word) {
+          continue;
+        }
+
+        return new vscode.Hover(`sub interface ${word}`);
       }
-
-      const interfaceText = document.getText(interfaceRange);
-      const match = interfaceRegex.exec(interfaceText);
-
-      if (!match || !(match[1] === word)) {
-        return null;
-      }
-
-      return new vscode.Hover(`This is interface '${match[1]}' declaration.`);
     },
   };
 
