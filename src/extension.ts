@@ -21,6 +21,8 @@ export function activate(context: vscode.ExtensionContext) {
 
       const subInterfaces: ts.InterfaceDeclaration[] = [];
 
+      const checker = program.getTypeChecker();
+
       ts.forEachChild(sourceFile, visit);
 
       function visit(node: ts.Node) {
@@ -41,13 +43,43 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       const word = document.getText(range);
+      const types: Record<string, string> = {};
 
       for (const subInterface of subInterfaces) {
         if (subInterface.name.text !== word) {
           continue;
         }
 
-        return new vscode.Hover(`sub interface ${word}`);
+        const symbol = checker.getSymbolAtLocation(subInterface.name);
+
+        if (!symbol) {
+          continue;
+        }
+
+        const type = checker.getDeclaredTypeOfSymbol(symbol);
+
+        const properties = type.getProperties();
+
+        properties.forEach((property) => {
+          types[property.name] = checker.typeToString(
+            checker.getTypeOfSymbolAtLocation(
+              property,
+              property.valueDeclaration!,
+            ),
+          );
+        });
+
+        let props = "";
+
+        for (const key in types) {
+          props += `\n\t${key}: ${types[key]};`;
+        }
+
+        return new vscode.Hover(
+          new vscode.MarkdownString(
+            `\`\`\`tsx\ninterface Prettified<${word}> {${props}\n}\n\`\`\``,
+          ),
+        );
       }
     },
   };
