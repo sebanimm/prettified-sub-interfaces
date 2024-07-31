@@ -3,6 +3,8 @@ import ts from "typescript";
 
 export function activate(context: vscode.ExtensionContext) {
   const registeredLanguages = new Set<string>();
+  const subInterfaces = new Set<ts.InterfaceDeclaration>();
+  const types: Record<string, string> = {};
 
   const hoverProvider: vscode.HoverProvider = {
     provideHover(document, position) {
@@ -19,15 +21,13 @@ export function activate(context: vscode.ExtensionContext) {
         return null;
       }
 
-      const subInterfaces: ts.InterfaceDeclaration[] = [];
-
       const checker = program.getTypeChecker();
 
       ts.forEachChild(sourceFile, visit);
 
       function visit(node: ts.Node) {
         if (ts.isInterfaceDeclaration(node) && isSubInterface(node)) {
-          subInterfaces.push(node);
+          subInterfaces.add(node);
         }
 
         ts.forEachChild(node, visit);
@@ -43,7 +43,6 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       const word = document.getText(range);
-      const types: Record<string, string> = {};
 
       for (const subInterface of subInterfaces) {
         if (subInterface.name.text !== word) {
