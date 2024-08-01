@@ -35,9 +35,6 @@
     "lint": "eslint src --ext ts",
     "test": "vscode-test"
   },
-  "dependencies": {
-    "typescript": "^5.5.4"
-  },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
@@ -49,5 +46,8 @@
     "esbuild": "^0.20.2",
     "eslint": "^8.57.0",
     "npm-run-all": "^4.1.5"
+  },
+  "dependencies": {
+    "typescript": "^5.4.5"
   }
 }
