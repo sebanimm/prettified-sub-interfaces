@@ -1,6 +1,7 @@
 {
   "name": "prettified-sub-interfaces",
   "displayName": "Prettified Sub Interfaces",
+  "publisher": "sebanimm",
   "description": "A vscode extension which makes your sub interfaces give you the parent interface's type.",
   "version": "0.0.1",
   "repository": {
