@@ -1,8 +1,9 @@
 import * as vscode from "vscode";
 import ts from "typescript";
 
+const languages = ["typescript", "typescriptreact"];
+
 export function activate(context: vscode.ExtensionContext) {
-  const registeredLanguages = new Set<string>();
   const subInterfaces = new Set<ts.InterfaceDeclaration>();
   const types: Record<string, string> = {};
 
@@ -84,34 +85,9 @@ export function activate(context: vscode.ExtensionContext) {
   };
 
   context.subscriptions.push(
-    vscode.languages.onDidChangeDiagnostics((e) => {
-      const editors = vscode.window.visibleTextEditors;
-
-      editors.forEach((editor) => {
-        const { languageId, uri: documentUri } = editor.document;
-
-        if (registeredLanguages.has(languageId)) {
-          return;
-        }
-
-        const isUriInDiagnostics = e.uris.some(
-          (uri) => uri.toString() === documentUri.toString(),
-        );
-
-        if (!isUriInDiagnostics) {
-          return;
-        }
-
-        registeredLanguages.add(languageId);
-
-        context.subscriptions.push(
-          vscode.languages.registerHoverProvider(
-            { language: languageId },
-            hoverProvider,
-          ),
-        );
-      });
-    }),
+    ...languages.map((language) =>
+      vscode.languages.registerHoverProvider({ language }, hoverProvider),
+    ),
   );
 }
 
