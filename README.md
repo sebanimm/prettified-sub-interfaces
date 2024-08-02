@@ -1,6 +1,6 @@
 # Prettified Sub Interfaces
 
-Makes your sub interfaces give you the parent interface's type.
+Makes your sub interfaces give you better type informations.
 
 > This project is heavily inspired by [this video](https://youtube.com/shorts/2lCCKiWGlC0?si=cziYTa31RRDW_Qq_).
 
